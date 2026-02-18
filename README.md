@@ -1,155 +1,87 @@
 # CookieVerify.com - LinkedIn Cookie Validator
 
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Flutter](https://img.shields.io/badge/Flutter-3.35.4-blue.svg)](https://flutter.dev/)
-[![Python](https://img.shields.io/badge/Python-3.12-green.svg)](https://www.python.org/)
+## 🌐 Live Deployment
 
-Professional LinkedIn cookie validation tool with web interface and REST API for verifying cookie authenticity and extracting profile data.
+### **Web Application**
+**URL**: https://5060-i1cjab7jvbxcbqjt7kvxh-d0b9e1e2.sandbox.novita.ai
 
-## 🌟 Features
+### **API Endpoint**
+**URL**: https://5061-i1cjab7jvbxcbqjt7kvxh-d0b9e1e2.sandbox.novita.ai
 
-- **Web Application**: Flutter-based responsive web interface
-- **REST API**: Python Flask proxy server for cookie validation
-- **Batch Processing**: Validate multiple cookies simultaneously
-- **Profile Extraction**: Extract name, title, company, and profile URL
-- **Export Options**: JSON and CSV export formats
-- **Real-time Validation**: Instant feedback on cookie validity
-- **Detailed Results**: Separate working and non-working cookies
+---
 
-## 🚀 Live Demo
+## 🚀 Project Overview
 
-- **Web App**: [https://5060-irz84mcqme0f7uh3tsxbk-0e616f0a.sandbox.novita.ai](https://5060-irz84mcqme0f7uh3tsxbk-0e616f0a.sandbox.novita.ai)
-- **API Endpoint**: [https://5061-irz84mcqme0f7uh3tsxbk-0e616f0a.sandbox.novita.ai/api/validate](https://5061-irz84mcqme0f7uh3tsxbk-0e616f0a.sandbox.novita.ai/api/validate)
+**CookieVerify.com** is a professional LinkedIn cookie validation tool that allows users to:
+- Validate LinkedIn cookies (li_at) for authenticity
+- Extract profile information (name, title, company)
+- Process multiple cookies in batch mode
+- Export results in JSON and CSV formats
 
-## 📋 Table of Contents
+---
 
-- [Architecture](#architecture)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Documentation](#api-documentation)
-- [Development](#development)
-- [Testing](#testing)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-- [License](#license)
+## ✨ Features
 
-## 🏗️ Architecture
+### Currently Completed Features
 
-### Frontend (Flutter Web)
-- **Framework**: Flutter 3.35.4 / Dart 3.9.2
-- **UI Components**: Material Design 3
-- **State Management**: StatefulWidget with setState
-- **HTTP Client**: Built-in http package
-- **Features**:
-  - Single cookie validation
-  - Batch cookie validation (paste multiple cookies)
-  - Real-time validation feedback
-  - Export to JSON/CSV
-  - Responsive design
+✅ **Single Cookie Validation**
+- Validate one LinkedIn cookie at a time
+- Extract profile data including name, title, company
+- Display LinkedIn profile URL
+- Real-time validation feedback
 
-### Backend (Python Flask)
-- **Framework**: Flask (Python 3.12)
-- **Purpose**: LinkedIn API proxy and cookie validation
-- **Features**:
-  - Cookie authentication testing
-  - Profile data extraction
-  - Error handling and validation
-  - CORS support for web access
-  - RESTful API endpoints
+✅ **Batch Cookie Validation**
+- Process multiple cookies simultaneously
+- Progress indicator during validation
+- Summary statistics (total/valid/invalid)
+- Rate limiting to avoid API blocks
 
-### Technology Stack
+✅ **Data Extraction**
+- First Name & Last Name extraction
+- Job Title and Company information
+- LinkedIn Profile URL (via Google search)
+- Cookie expiration validation
 
-```
-┌─────────────────────────────────────────┐
-│         Flutter Web Interface           │
-│  (Material Design 3 + Responsive UI)    │
-└──────────────┬──────────────────────────┘
-               │ HTTP/JSON
-               ▼
-┌─────────────────────────────────────────┐
-│      Python Flask Proxy Server          │
-│  (Cookie Validation + Data Extraction)  │
-└──────────────┬──────────────────────────┘
-               │ REST API
-               ▼
-┌─────────────────────────────────────────┐
-│        LinkedIn API + Web Scraping      │
-│   (Profile Data + Authentication Test)  │
-└─────────────────────────────────────────┘
-```
+✅ **Export Functionality**
+- Export results to JSON format
+- Export results to CSV format
+- Clipboard integration for easy sharing
 
-## 📦 Installation
+✅ **Modern UI/UX**
+- LinkedIn-themed design (#0A66C2)
+- Responsive layout (mobile & desktop)
+- Tab-based navigation
+- Animated result cards
+- Loading indicators
 
-### Prerequisites
+---
 
-- Flutter SDK 3.35.4+
-- Dart SDK 3.9.2+
-- Python 3.12+
-- pip (Python package manager)
-
-### Clone Repository
-
-```bash
-git clone https://github.com/gershonconsulting/CookieVerify.git
-cd CookieVerify
-```
-
-### Backend Setup
-
-```bash
-# Install Python dependencies
-pip install flask flask-cors requests beautifulsoup4 lxml
-
-# Start the proxy server
-python3 proxy_server.py
-```
-
-The API server will start on `http://localhost:5061`
-
-### Frontend Setup
-
-```bash
-# Install Flutter dependencies
-flutter pub get
-
-# Run in debug mode
-flutter run -d chrome
-
-# Or build for production
-flutter build web --release
-```
-
-## 🎯 Usage
+## 🔗 Functional Entry URIs
 
 ### Web Interface
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/` | GET | Main web application |
+| `/manifest.json` | GET | PWA manifest |
+| `/favicon.png` | GET | Application icon |
 
-1. **Single Cookie Validation**:
-   - Paste a LinkedIn cookie in the input field
-   - Click "Validate Single Cookie"
-   - View results instantly
+### API Endpoints
+| Endpoint | Method | Parameters | Description |
+|----------|--------|------------|-------------|
+| `/api/validate` | POST | `{cookie, email?, name?}` | Validate LinkedIn cookie |
+| `/api/health` | GET | None | API health check |
+| `/api/docs` | GET | None | API documentation |
+| `/api/quick-start` | GET | None | Quick start guide |
+| `/` | GET | None | API information |
 
-2. **Batch Validation**:
-   - Switch to "Batch Validation" tab
-   - Paste multiple cookies (one per line)
-   - Click "Validate Batch"
-   - View grouped results (Working/Non-working)
-
-3. **Export Results**:
-   - Click "Export JSON" or "Export CSV"
-   - Results copied to clipboard
-   - Paste into your preferred application
-
-### API Usage
-
-#### Validate Single Cookie
-
+### API Request Example
 ```bash
-curl -X POST https://your-api-url/api/validate \
+curl -X POST https://5061-i1cjab7jvbxcbqjt7kvxh-d0b9e1e2.sandbox.novita.ai/api/validate \
   -H "Content-Type: application/json" \
   -d '{"cookie": "YOUR_LINKEDIN_COOKIE"}'
 ```
 
-**Response (Valid Cookie)**:
+### API Response Example (Valid Cookie)
 ```json
 {
   "isValid": true,
@@ -162,245 +94,248 @@ curl -X POST https://your-api-url/api/validate \
 }
 ```
 
-**Response (Invalid Cookie)**:
-```json
-{
-  "isValid": false,
-  "error": "Cookie validation failed",
-  "cookieValue": "YOUR_COOKIE_HERE"
-}
-```
+---
 
-#### Health Check
+## ⏭️ Features Not Yet Implemented
 
-```bash
-curl https://your-api-url/api/health
-```
+🔜 **Domain Configuration**
+- Custom domain setup (CookieVerify.com)
+- SSL certificate configuration
+- DNS management
 
-**Response**:
-```json
-{
-  "service": "CookieVerify.com API",
-  "status": "ok"
-}
-```
+🔜 **Advanced Features**
+- Cookie expiration date detection
+- Bulk upload via CSV file
+- Historical validation tracking
+- User authentication system
+- Saved cookie collections
 
-## 📚 API Documentation
+🔜 **API Enhancements**
+- Rate limiting configuration
+- API key authentication
+- Usage analytics
+- Webhook notifications
 
-### Endpoints
-
-#### `POST /api/validate`
-
-Validates a LinkedIn cookie and extracts profile data.
-
-**Request Body**:
-```json
-{
-  "cookie": "REQUIRED - LinkedIn li_at cookie value",
-  "email": "OPTIONAL - User email for context",
-  "name": "OPTIONAL - User name for context"
-}
-```
-
-**Success Response (200)**:
-```json
-{
-  "isValid": true,
-  "firstName": "string",
-  "lastName": "string",
-  "fullName": "string",
-  "title": "string",
-  "company": "string",
-  "profileUrl": "string"
-}
-```
-
-**Error Response (200)**:
-```json
-{
-  "isValid": false,
-  "error": "string",
-  "cookieValue": "string"
-}
-```
-
-**Common Error Messages**:
-- `"Invalid or missing cookie parameter"` - Cookie not provided
-- `"Cookie validation failed"` - Cookie expired or invalid
-- `"Cookie authenticated but profile data unavailable"` - Valid cookie but no profile data
-- `"Profile data extraction failed"` - Technical error during extraction
-
-#### `GET /api/health`
-
-Health check endpoint.
-
-**Response (200)**:
-```json
-{
-  "service": "CookieVerify.com API",
-  "status": "ok"
-}
-```
-
-#### `GET /api/docs`
-
-Returns API documentation in JSON format.
-
-## 🛠️ Development
-
-### Project Structure
-
-```
-CookieVerify/
-├── lib/                          # Flutter source code
-│   ├── main.dart                # App entry point
-│   ├── models/
-│   │   └── cookie_result.dart  # Data models
-│   └── services/
-│       └── linkedin_validator.dart  # API client
-├── web/                         # Web-specific files
-│   ├── index.html              # HTML template
-│   ├── manifest.json           # PWA manifest
-│   └── favicon.png             # App icon
-├── proxy_server.py             # Python Flask API server
-├── api_docs.py                 # API documentation generator
-├── pubspec.yaml                # Flutter dependencies
-├── analysis_options.yaml       # Dart linter config
-└── README.md                   # This file
-```
-
-### Running Tests
-
-```bash
-# Flutter tests
-flutter test
-
-# Python API tests
-python3 -m pytest tests/
-```
-
-### Code Quality
-
-```bash
-# Flutter analysis
-flutter analyze
-
-# Dart formatting
-dart format .
-```
-
-## 🚀 Deployment
-
-### Frontend Deployment (Flutter Web)
-
-```bash
-# Build production release
-flutter build web --release
-
-# Serve with Python HTTP server
-cd build/web
-python3 -m http.server 5060 --bind 0.0.0.0
-```
-
-### Backend Deployment (Flask API)
-
-```bash
-# Production deployment with Gunicorn
-pip install gunicorn
-gunicorn -w 4 -b 0.0.0.0:5061 proxy_server:app
-```
-
-### Docker Deployment
-
-```dockerfile
-# Dockerfile example (create as needed)
-FROM python:3.12-slim
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY proxy_server.py .
-EXPOSE 5061
-CMD ["python3", "proxy_server.py"]
-```
-
-## 📊 Performance
-
-- **Cookie Validation**: ~2-5 seconds per cookie
-- **Batch Processing**: Sequential validation with rate limiting
-- **API Response Time**: < 100ms (health check)
-- **Concurrent Users**: Supports multiple simultaneous validations
-
-## 🔒 Security Considerations
-
-- **Cookie Storage**: Cookies are validated in real-time, not stored
-- **CORS**: Configured for web access (adjust for production)
-- **Rate Limiting**: Implement rate limiting for production use
-- **HTTPS**: Always use HTTPS in production
-- **Input Validation**: All inputs are validated and sanitized
-
-## 🐛 Known Issues
-
-- Some LinkedIn profiles without custom URLs cannot be extracted
-- Rate limiting may affect batch validation speed
-- Cookies expire naturally over time (typical validity: 7-30 days)
-
-## 📈 Success Rates
-
-Typical cookie validation success rates:
-- **Fresh cookies (< 7 days)**: 40-50% valid
-- **Medium age (7-30 days)**: 20-35% valid
-- **Old cookies (> 30 days)**: 5-15% valid
-
-Factors affecting validation:
-- Cookie age and expiration
-- Account status (active, suspended, deleted)
-- Profile completeness
-- Privacy settings
-- LinkedIn URL availability
-
-## 🤝 Contributing
-
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-### Development Guidelines
-
-- Follow Flutter/Dart style guide
-- Follow PEP 8 for Python code
-- Write tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting PR
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 👥 Authors
-
-- **Gershon Consulting** - *Initial work* - [gershonconsulting](https://github.com/gershonconsulting)
-
-## 🙏 Acknowledgments
-
-- Flutter team for the excellent framework
-- LinkedIn for the professional networking platform
-- Open source community for various libraries used
-
-## 📞 Support
-
-For support, email support@gershonconsulting.com or open an issue in the GitHub repository.
-
-## 🔗 Links
-
-- **Website**: [CookieVerify.com](https://cookieverify.com)
-- **Documentation**: [API Docs](https://5061-irz84mcqme0f7uh3tsxbk-0e616f0a.sandbox.novita.ai/api/docs)
-- **Issues**: [GitHub Issues](https://github.com/gershonconsulting/CookieVerify/issues)
-- **Changelog**: [CHANGELOG.md](CHANGELOG.md)
+🔜 **Performance Optimizations**
+- Caching layer for repeated validations
+- Concurrent batch processing
+- CDN integration
 
 ---
 
-**Made with ❤️ by Gershon Consulting**
+## 📋 Recommended Next Steps
+
+### Immediate Priority
+1. ✅ **Test deployment** with sample LinkedIn cookies
+2. ✅ **Verify API connectivity** between frontend and backend
+3. 🔲 **Configure custom domain** (CookieVerify.com)
+4. 🔲 **Set up production monitoring** and logging
+
+### Short Term
+1. 🔲 Add **rate limiting** to prevent abuse
+2. 🔲 Implement **error tracking** (Sentry/LogRocket)
+3. 🔲 Add **analytics** (Google Analytics/Plausible)
+4. 🔲 Create **user documentation** and tutorials
+
+### Long Term
+1. 🔲 Build **API authentication** system
+2. 🔲 Add **historical data** tracking
+3. 🔲 Implement **premium features** (bulk processing, API access)
+4. 🔲 Create **mobile applications** (iOS/Android)
+
+---
+
+## 🏗️ Data Architecture
+
+### Data Models
+
+**CookieValidationRequest**
+```typescript
+{
+  cookie: string;        // Required: LinkedIn li_at cookie
+  email?: string;        // Optional: User email for context
+  name?: string;         // Optional: User name for better search
+}
+```
+
+**CookieValidationResponse (Valid)**
+```typescript
+{
+  isValid: true;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  title: string;
+  company: string;
+  profileUrl: string;
+}
+```
+
+**CookieValidationResponse (Invalid)**
+```typescript
+{
+  isValid: false;
+  error: string;
+  cookieValue: string;   // Truncated cookie value
+}
+```
+
+### Storage Services
+- **No persistent storage** - All validations are stateless
+- Cookies are validated in real-time
+- No data retention or logging (privacy-first)
+
+### Data Flow
+```
+User Input → Frontend (HTML/JS)
+    ↓
+API Request (POST /api/validate)
+    ↓
+Backend (Python Flask) → LinkedIn API
+    ↓
+Profile Extraction → Google Search (URL)
+    ↓
+Response (JSON) → Frontend
+    ↓
+Display Results + Export Options
+```
+
+---
+
+## 👥 User Guide
+
+### How to Use CookieVerify.com
+
+#### Step 1: Get Your LinkedIn Cookie
+1. Log into LinkedIn in your browser
+2. Open Developer Tools (F12)
+3. Go to **Application** → **Cookies** → `linkedin.com`
+4. Find the `li_at` cookie and copy its value
+
+#### Step 2: Single Cookie Validation
+1. Visit the web app URL
+2. Paste your cookie in the **Single Cookie** tab
+3. Click **"Validate Cookie"**
+4. View your profile information
+
+#### Step 3: Batch Validation
+1. Switch to **"Batch Validation"** tab
+2. Paste multiple cookies (one per line)
+3. Click **"Validate Batch"**
+4. Wait for processing (2 seconds per cookie)
+5. Review statistics and individual results
+
+#### Step 4: Export Results
+1. Click **"Export JSON"** for structured data
+2. Click **"Export CSV"** for spreadsheet format
+3. Results are copied to clipboard automatically
+4. Paste into your preferred application
+
+### Tips for Best Results
+- Use fresh cookies (< 7 days old) for highest validity rate
+- Wait between batch validations to avoid rate limiting
+- Cookies typically remain valid for 7-30 days
+- Profile data depends on LinkedIn privacy settings
+
+---
+
+## 🛠️ Deployment Status
+
+### Current Configuration
+- **Platform**: GenSpark Hosted Deploy (Novita Sandbox)
+- **Frontend**: HTML/CSS/JavaScript (Vanilla)
+- **Backend**: Python 3.12 + Flask
+- **Process Manager**: PM2
+- **Status**: ✅ Active
+
+### Tech Stack
+- **Frontend**: HTML5, TailwindCSS, Axios, Font Awesome
+- **Backend**: Flask, Flask-CORS, Requests, BeautifulSoup4
+- **Server**: Python HTTP Server (port 5060), Flask (port 5061)
+- **Deployment**: PM2 Process Manager
+
+### Resource Usage
+- **Frontend Memory**: ~9 MB
+- **Backend Memory**: ~13 MB
+- **Response Time**: ~2-5 seconds per cookie
+- **Uptime**: Managed by PM2 auto-restart
+
+---
+
+## 📊 Performance Metrics
+
+### Validation Success Rates
+- **Fresh cookies** (< 7 days): 40-50% valid
+- **Medium age** (7-30 days): 20-35% valid
+- **Old cookies** (> 30 days): 5-15% valid
+
+### Processing Times
+- Single validation: 2-5 seconds
+- Batch processing: 2 seconds per cookie (sequential)
+- API health check: < 100ms
+
+---
+
+## 🔒 Security & Privacy
+
+### Data Handling
+- ✅ No server-side cookie storage
+- ✅ No database or persistent storage
+- ✅ No logging of cookie values
+- ✅ All validation happens in real-time
+- ✅ CORS enabled for web access
+
+### Production Recommendations
+- [ ] Implement rate limiting
+- [ ] Add API key authentication
+- [ ] Set up HTTPS (already enabled)
+- [ ] Configure firewall rules
+- [ ] Add DDoS protection
+
+---
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**API Connection Failed**
+- Check that both services are running: `pm2 status`
+- Verify ports are accessible: `curl http://localhost:5061/api/health`
+- Restart services: `pm2 restart all`
+
+**Cookie Validation Failed**
+- Verify cookie is complete (no truncation)
+- Check cookie age (older cookies less likely to be valid)
+- Ensure cookie starts with correct format
+- Try validating manually on LinkedIn
+
+**Batch Processing Slow**
+- This is intentional to avoid rate limiting
+- Each cookie takes 2 seconds minimum
+- Consider reducing batch size for faster results
+
+---
+
+## 📞 Support & Contact
+
+- **GitHub**: https://github.com/gershonconsulting/CookieVerify
+- **Issues**: https://github.com/gershonconsulting/CookieVerify/issues
+- **Email**: support@gershonconsulting.com
+
+---
+
+## 📝 Version History
+
+### v1.0.0 (Current)
+- ✅ Initial deployment on GenSpark
+- ✅ HTML/JS frontend (replaced Flutter)
+- ✅ Python Flask backend
+- ✅ Single & batch validation
+- ✅ JSON/CSV export
+- ✅ PM2 process management
+
+---
+
+**Built with ❤️ by Gershon Consulting**
+
+**Last Updated**: February 18, 2026
