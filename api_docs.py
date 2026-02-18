@@ -7,8 +7,8 @@ Provides interactive documentation for external integrations
 API_DOCUMENTATION = {
     "service": "CookieVerify API",
     "version": "1.0.0",
-    "base_url": "https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai",
-    "authentication": "None required (sandbox mode)",
+    "base_url": "https://api.cookieverify.com",
+    "authentication": "None required",
     
     "endpoints": {
         "validate_cookie": {
@@ -98,7 +98,7 @@ API_DOCUMENTATION = {
     },
     
     "code_examples": {
-        "curl": '''curl -X POST https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai/api/validate \\
+        "curl": '''curl -X POST https://api.cookieverify.com/api/validate \\
   -H "Content-Type: application/json" \\
   -d '{
     "cookie": "YOUR_LINKEDIN_COOKIE"
@@ -106,7 +106,7 @@ API_DOCUMENTATION = {
         
         "python": '''import requests
 
-url = "https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai/api/validate"
+url = "https://api.cookieverify.com/api/validate"
 
 payload = {
     "cookie": "YOUR_LINKEDIN_COOKIE"
@@ -123,7 +123,7 @@ if result.get('isValid'):
 else:
     print(f"❌ Invalid Cookie: {result.get('error')}")''',
         
-        "javascript": '''const response = await fetch('https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai/api/validate', {
+        "javascript": '''const response = await fetch('https://api.cookieverify.com/api/validate', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
@@ -145,7 +145,7 @@ if (result.isValid) {
 }''',
         
         "php": '''<?php
-$url = "https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai/api/validate";
+$url = "https://api.cookieverify.com/api/validate";
 
 $data = array('cookie' => 'YOUR_LINKEDIN_COOKIE');
 $payload = json_encode($data);
@@ -174,7 +174,7 @@ if ($response['isValid']) {
     "rate_limits": {
         "requests_per_minute": 60,
         "burst_allowance": 10,
-        "note": "Sandbox has relaxed limits. Production will have stricter limits."
+        "note": "Rate limits enforced to ensure service quality."
     },
     
     "cors": {
@@ -186,8 +186,9 @@ if ($response['isValid']) {
     
     "support": {
         "documentation": "See /api/docs endpoint",
-        "status": "Sandbox - Temporary URL",
-        "production_url": "Will be https://api.cookieverify.com"
+        "website": "https://cookieverify.com",
+        "api_url": "https://api.cookieverify.com",
+        "github": "https://github.com/gershonconsulting/CookieVerify"
     }
 }
 
@@ -205,13 +206,13 @@ def get_quick_start_guide():
 ## 1. Test the API
 
 ```bash
-curl https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai/api/health
+curl https://api.cookieverify.com/api/health
 ```
 
 ## 2. Validate a Cookie
 
 ```bash
-curl -X POST https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai/api/validate \\
+curl -X POST https://api.cookieverify.com/api/validate \\
   -H "Content-Type: application/json" \\
   -d '{"cookie": "YOUR_LINKEDIN_COOKIE"}'
 ```

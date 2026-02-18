@@ -398,8 +398,8 @@ def root():
             'documentation': '/api/docs',
             'quick_start': '/api/quick-start'
         },
-        'sandbox_url': 'https://5061-irz84mcqme0f7uh3tsxbk-18e660f9.sandbox.novita.ai',
-        'production_url': 'https://api.cookieverify.com (coming soon)'
+        'api_url': 'https://api.cookieverify.com',
+        'web_url': 'https://cookieverify.com'
     })
 
 if __name__ == '__main__':
