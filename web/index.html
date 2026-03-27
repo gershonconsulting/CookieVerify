@@ -1,38 +1,662 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CookieVerify.com — LinkedIn Cookie Validator</title>
+  <meta name="description" content="Validate LinkedIn li_at cookies and extract profile information. Single and batch processing with JSON/CSV export." />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
+    :root {
+      --primary: #0a66c2;
+      --primary-dark: #004182;
+      --primary-light: #e8f0fe;
+      --success: #057642;
+      --success-light: #e6f4ea;
+      --error: #cc1016;
+      --error-light: #fdecea;
+      --text: #1d1d1f;
+      --text-muted: #6e6e73;
+      --border: #d1d5db;
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --radius: 12px;
+    }
 
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
-  -->
-  <base href="$FLUTTER_BASE_HREF">
+    header {
+      background: var(--card);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+    }
+    .logo svg { width: 28px; height: 28px; }
+    .api-link {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-decoration: none;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      transition: all .2s;
+    }
+    .api-link:hover { border-color: var(--primary); color: var(--primary); }
 
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="CookieVerify.com - Professional LinkedIn Cookie Validation Service">
+    main {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
 
-  <!-- iOS meta tags & icons -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="CookieVerify">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    .hero {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .hero h1 {
+      font-size: clamp(24px, 4vw, 36px);
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+    .hero p { font-size: 16px; color: var(--text-muted); }
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="favicon.png"/>
+    .tabs {
+      display: flex;
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      background: transparent;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all .2s;
+    }
+    .tab.active { background: var(--primary); color: #fff; }
+    .tab:hover:not(.active) { background: var(--primary-light); color: var(--primary); }
 
-  <title>CookieVerify.com - LinkedIn Cookie Validator</title>
-  <link rel="manifest" href="manifest.json">
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .card label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .card textarea {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 14px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      resize: vertical;
+      transition: border-color .2s;
+      color: var(--text);
+      background: #fafafa;
+    }
+    .card textarea:focus { outline: none; border-color: var(--primary); background: #fff; }
+    .hint { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .btn-outline:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); }
+    .btn-outline:disabled { opacity: .4; cursor: not-allowed; }
+
+    .loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 32px;
+      color: var(--text-muted);
+    }
+    .spinner {
+      width: 22px; height: 22px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+    }
+    .stat .num { font-size: 32px; font-weight: 800; line-height: 1; }
+    .stat .lbl { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+    .stat.valid .num { color: var(--success); }
+    .stat.invalid .num { color: var(--error); }
+    .stat.total .num { color: var(--primary); }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      margin: 0;
+    }
+    .badge {
+      border-radius: 20px;
+      padding: 2px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .badge.green { background: var(--success-light); color: var(--success); }
+    .badge.red { background: var(--error-light); color: var(--error); }
+    .export-btns { display: flex; gap: 8px; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th {
+      background: var(--bg);
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td {
+      padding: 12px 14px;
+      vertical-align: middle;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    tbody td a { color: var(--primary); text-decoration: none; }
+    tbody td a:hover { text-decoration: underline; }
+
+    .invalid-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--error);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 10px;
+    }
+    .invalid-item .cookie-preview {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .invalid-item .error-msg { font-size: 13px; color: var(--error); margin-top: 4px; }
+
+    .result-card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .rc-header {
+      padding: 18px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .rc-header.valid { background: var(--success-light); border-bottom: 1px solid #c3e6cb; }
+    .rc-header.invalid { background: var(--error-light); border-bottom: 1px solid #f5c6cb; }
+    .rc-icon { font-size: 28px; }
+    .rc-name { font-size: 18px; font-weight: 700; }
+    .rc-status { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+    .rc-body { padding: 20px 24px; }
+    .rc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .rc-field label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: .05em; }
+    .rc-field .val { font-size: 14px; margin-top: 3px; word-break: break-word; }
+    .rc-field .val a { color: var(--primary); text-decoration: none; }
+    .rc-field .val a:hover { text-decoration: underline; }
+
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #fff;
+      z-index: 999;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all .3s;
+      pointer-events: none;
+    }
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.success { background: var(--success); }
+    #toast.error { background: var(--error); }
+
+    .api-card {
+      background: #1a1a2e;
+      color: #e2e2e2;
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-top: 40px;
+    }
+    .api-card h2 { font-size: 20px; font-weight: 700; margin-bottom: 6px; color: #fff; }
+    .api-card p { font-size: 14px; color: #a0a0b0; margin-bottom: 20px; }
+    .code-block {
+      background: #0d0d1a;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: auto;
+      position: relative;
+      white-space: pre;
+    }
+    .code-block .kw { color: #c792ea; }
+    .code-block .str { color: #c3e88d; }
+    .code-block .key { color: #82aaff; }
+    .code-block .cmt { color: #546e7a; }
+    .copy-code {
+      position: absolute;
+      top: 10px; right: 10px;
+      background: #2a2a3e;
+      border: none;
+      color: #a0a0b0;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .copy-code:hover { background: #3a3a5e; color: #fff; }
+    .endpoint-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .method {
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: monospace;
+    }
+    .method.post { background: #1b4332; color: #6fcf97; }
+    .method.get { background: #1a3a5c; color: #56b4f5; }
+    .endpoint-url { font-family: monospace; font-size: 13px; color: #e2e2e2; }
+  </style>
 </head>
 <body>
-  <script src="flutter_bootstrap.js" async></script>
+
+<header>
+  <a class="logo" href="/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      <path d="M9 12l2 2 4-4"/>
+    </svg>
+    CookieVerify
+  </a>
+  <a class="api-link" href="#api-docs">API Docs</a>
+</header>
+
+<main>
+  <div class="hero">
+    <h1>LinkedIn Cookie Validator</h1>
+    <p>Validate <code>li_at</code> cookies and extract profile information instantly</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab(0)">Single Cookie</button>
+    <button class="tab" onclick="switchTab(1)">Batch Validate</button>
+  </div>
+
+  <div id="tab-0" class="card">
+    <label for="single-input">LinkedIn Cookie (li_at)</label>
+    <textarea id="single-input" rows="3" placeholder="Paste your li_at cookie value here..."></textarea>
+    <div class="hint">Found in browser DevTools → Application → Cookies → linkedin.com → li_at</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="validateSingle()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Validate Cookie
+      </button>
+    </div>
+  </div>
+
+  <div id="tab-1" class="card" style="display:none">
+    <label for="batch-input">Multiple Cookies (one per line)</label>
+    <textarea id="batch-input" rows="8" placeholder="Paste cookies here, one per line..."></textarea>
+    <div class="hint">Each line should contain one complete li_at cookie value</div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="validateBatch()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
+        Validate Batch
+      </button>
+    </div>
+  </div>
+
+  <div id="results"></div>
+
+  <div class="api-card" id="api-docs">
+    <h2>REST API</h2>
+    <p>Use <code>api.cookieverify.com</code> to validate cookies programmatically from any language.</p>
+
+    <div class="endpoint-row">
+      <span class="method post">POST</span>
+      <span class="endpoint-url">https://api.cookieverify.com/api/validate</span>
+    </div>
+
+    <div class="code-block"><button class="copy-code" onclick="copyCode(this)">Copy</button><span class="cmt"># cURL</span>
+curl -X POST https://api.cookieverify.com/api/validate \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d <span class="str">'{"cookie": "AQEDATxxxxxxx..."}'</span></div>
+
+    <div style="margin-top:16px" class="endpoint-row">
+      <span class="method get">GET</span>
+      <span class="endpoint-url">https://api.cookieverify.com/api/health</span>
+    </div>
+
+    <div style="margin-top:16px" class="code-block"><button class="copy-code" onclick="copyCode(this)">Copy</button><span class="cmt">// JavaScript</span>
+<span class="kw">const</span> res = <span class="kw">await</span> fetch(<span class="str">'https://api.cookieverify.com/api/validate'</span>, {
+  <span class="key">method</span>: <span class="str">'POST'</span>,
+  <span class="key">headers</span>: { <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span> },
+  <span class="key">body</span>: JSON.stringify({ <span class="key">cookie</span>: <span class="str">'AQEDATxxxxxxx...'</span> })
+});
+<span class="kw">const</span> data = <span class="kw">await</span> res.json();
+<span class="cmt">// { isValid: true, fullName: "...", company: "...", profileUrl: "..." }</span></div>
+
+    <div style="margin-top:16px" class="code-block"><span class="cmt"># Python</span>
+<span class="kw">import</span> requests
+res = requests.post(<span class="str">'https://api.cookieverify.com/api/validate'</span>,
+    json={<span class="str">'cookie'</span>: <span class="str">'AQEDATxxxxxxx...'</span>})
+print(res.json())</div>
+
+    <div style="margin-top:20px; font-size:13px; color:#a0a0b0;">
+      <strong style="color:#fff">Response fields: </strong>
+      <code style="color:#c3e88d">isValid</code>,
+      <code style="color:#c3e88d">fullName</code>,
+      <code style="color:#c3e88d">firstName</code>,
+      <code style="color:#c3e88d">lastName</code>,
+      <code style="color:#c3e88d">title</code>,
+      <code style="color:#c3e88d">company</code>,
+      <code style="color:#c3e88d">profileUrl</code>,
+      <code style="color:#c3e88d">vanityName</code>,
+      <code style="color:#c3e88d">testedAt</code>
+    </div>
+  </div>
+</main>
+
+<div id="toast"></div>
+
+<script>
+  const API_BASE = 'https://api.cookieverify.com';
+  let currentTab = 0;
+  let lastResults = [];
+
+  function switchTab(n) {
+    currentTab = n;
+    document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n));
+    document.getElementById('tab-0').style.display = n === 0 ? '' : 'none';
+    document.getElementById('tab-1').style.display = n === 1 ? '' : 'none';
+    document.getElementById('results').innerHTML = '';
+    lastResults = [];
+  }
+
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  function setLoading(on) {
+    document.querySelectorAll('.btn-primary, .btn-outline').forEach(b => b.disabled = on);
+  }
+
+  async function validateSingle() {
+    const cookie = document.getElementById('single-input').value.trim();
+    if (!cookie) { showToast('Please enter a cookie', 'error'); return; }
+    setLoading(true);
+    document.getElementById('results').innerHTML = `<div class="loader"><div class="spinner"></div><span>Validating...</span></div>`;
+    try {
+      const res = await fetch(`${API_BASE}/api/validate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cookie })
+      });
+      const data = await res.json();
+      lastResults = [data];
+      renderSingleResult(data);
+    } catch (e) {
+      showToast('Connection error: ' + e.message, 'error');
+      document.getElementById('results').innerHTML = '';
+    }
+    setLoading(false);
+  }
+
+  async function validateBatch() {
+    const input = document.getElementById('batch-input').value.trim();
+    if (!input) { showToast('Please enter cookies', 'error'); return; }
+    const cookies = input.split('\n').map(c => c.trim()).filter(Boolean);
+    if (!cookies.length) { showToast('No valid cookies found', 'error'); return; }
+    setLoading(true);
+    const results = [];
+    for (let i = 0; i < cookies.length; i++) {
+      document.getElementById('results').innerHTML = `<div class="loader"><div class="spinner"></div><span>Validating ${i + 1} / ${cookies.length}...</span></div>`;
+      try {
+        const res = await fetch(`${API_BASE}/api/validate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cookie: cookies[i] })
+        });
+        results.push(await res.json());
+      } catch (e) {
+        results.push({ isValid: false, cookieValue: cookies[i], error: e.message });
+      }
+    }
+    lastResults = results;
+    renderBatchResults(results);
+    setLoading(false);
+  }
+
+  function renderSingleResult(r) {
+    const valid = r.isValid;
+    const name = r.fullName || r.firstName || 'Unknown';
+    document.getElementById('results').innerHTML = `
+      <div class="result-card">
+        <div class="rc-header ${valid ? 'valid' : 'invalid'}">
+          <div class="rc-icon">${valid ? '✅' : '❌'}</div>
+          <div>
+            <div class="rc-name">${valid ? escHtml(name) : 'Invalid Cookie'}</div>
+            <div class="rc-status">${valid ? 'Cookie is valid and active' : escHtml(r.error || 'Validation failed')}</div>
+          </div>
+        </div>
+        ${valid ? `<div class="rc-body"><div class="rc-grid">
+          ${field('First Name', r.firstName)}
+          ${field('Last Name', r.lastName)}
+          ${field('Title', r.title || r.headline)}
+          ${field('Company', r.company)}
+          ${r.profileUrl ? field('Profile URL', `<a href="${escHtml(r.profileUrl)}" target="_blank">${escHtml(r.profileUrl)}</a>`) : ''}
+          ${field('Vanity Name', r.vanityName)}
+        </div></div>` : ''}
+      </div>`;
+  }
+
+  function field(label, val) {
+    if (!val) return '';
+    return `<div class="rc-field"><label>${label}</label><div class="val">${val}</div></div>`;
+  }
+
+  function renderBatchResults(results) {
+    const valid = results.filter(r => r.isValid);
+    const invalid = results.filter(r => !r.isValid);
+    let html = `
+      <div class="stats">
+        <div class="stat valid"><div class="num">${valid.length}</div><div class="lbl">Valid</div></div>
+        <div class="stat invalid"><div class="num">${invalid.length}</div><div class="lbl">Invalid</div></div>
+        <div class="stat total"><div class="num">${results.length}</div><div class="lbl">Total</div></div>
+      </div>`;
+
+    if (valid.length) {
+      html += `
+        <div class="results-header">
+          <div class="section-label">✅ Working Cookies <span class="badge green">${valid.length}</span></div>
+          <div class="export-btns">
+            <button class="btn btn-outline" onclick="exportJson()">Export JSON</button>
+            <button class="btn btn-outline" onclick="exportCsv()">Export CSV</button>
+          </div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>#</th><th>Full Name</th><th>Title</th><th>Company</th><th>Profile</th></tr></thead>
+              <tbody>
+                ${valid.map(r => `<tr>
+                  <td>${results.indexOf(r) + 1}</td>
+                  <td>${escHtml(r.fullName || r.firstName || '—')}</td>
+                  <td title="${escHtml(r.title || '')}">${escHtml(truncate(r.title, 30) || '—')}</td>
+                  <td title="${escHtml(r.company || '')}">${escHtml(truncate(r.company, 25) || '—')}</td>
+                  <td>${r.profileUrl ? `<a href="${escHtml(r.profileUrl)}" target="_blank">View</a>` : '—'}</td>
+                </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    if (invalid.length) {
+      html += `<div class="section-label" style="margin-bottom:12px">❌ Invalid Cookies <span class="badge red">${invalid.length}</span></div>`;
+      invalid.forEach(r => {
+        html += `<div class="invalid-item">
+          <div class="cookie-preview">Cookie #${results.indexOf(r) + 1}: ${escHtml((r.cookieValue || '').substring(0, 60))}...</div>
+          <div class="error-msg">${escHtml(r.error || 'Authentication failed')}</div>
+        </div>`;
+      });
+    }
+
+    document.getElementById('results').innerHTML = html;
+  }
+
+  function truncate(str, n) {
+    if (!str) return '';
+    return str.length > n ? str.substring(0, n) + '…' : str;
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function exportJson() {
+    download('cookieverify-results.json', JSON.stringify(lastResults, null, 2), 'application/json');
+    showToast('JSON downloaded');
+  }
+
+  function exportCsv() {
+    const h = ['#','isValid','fullName','firstName','lastName','title','company','profileUrl','vanityName','error'];
+    const rows = lastResults.map((r, i) => [
+      i+1, r.isValid, r.fullName||'', r.firstName||'', r.lastName||'',
+      r.title||'', r.company||'', r.profileUrl||'', r.vanityName||'', r.error||''
+    ]);
+    const csv = [h, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+    download('cookieverify-results.csv', csv, 'text/csv');
+    showToast('CSV downloaded');
+  }
+
+  function download(filename, content, type) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([content], { type }));
+    a.download = filename;
+    a.click();
+  }
+
+  function copyCode(btn) {
+    const block = btn.closest('.code-block');
+    const text = block.innerText.replace(/^Copy\n?/, '').trim();
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+    });
+  }
+</script>
 </body>
 </html>

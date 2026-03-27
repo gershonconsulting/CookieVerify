@@ -4,14 +4,15 @@ LinkedIn Cookie Validator - Backend Proxy Server
 Handles LinkedIn API requests to bypass CORS restrictions
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import re
 import json
+import os
 from datetime import datetime
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)  # Enable CORS for all routes
 
 @app.route('/api/validate', methods=['POST'])
@@ -385,33 +386,15 @@ def quick_start():
     from api_docs import get_quick_start_guide
     return get_quick_start_guide(), 200, {'Content-Type': 'text/plain'}
 
-@app.route('/', methods=['GET'])
-def root():
-    """Root endpoint with API information"""
-    return jsonify({
-        'service': 'CookieVerify API',
-        'version': '1.0.0',
-        'status': 'operational',
-        'endpoints': {
-            'health': '/api/health',
-            'validate': 'POST /api/validate',
-            'documentation': '/api/docs',
-            'quick_start': '/api/quick-start'
-        },
-        'api_url': 'https://api.cookieverify.com',
-        'web_url': 'https://cookieverify.com'
-    })
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_web(path):
+    """Serve the web frontend for all non-API routes"""
+    if path and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    return send_from_directory(app.static_folder, 'index.html')
 
 if __name__ == '__main__':
-    print('🚀 CookieVerify.com API Server')
-    print('📡 Starting server on http://0.0.0.0:5061')
-    print('✅ CORS enabled for all origins')
-    print('')
-    print('📚 Documentation:')
-    print('   - API Docs: /api/docs')
-    print('   - Quick Start: /api/quick-start')
-    print('   - Health Check: /api/health')
-    print('')
-    print('🌐 Official Website: https://cookieverify.com')
-    print('')
-    app.run(host='0.0.0.0', port=5061, debug=False)
+    port = int(os.environ.get('PORT', 5000))
+    print(f'CookieVerify API starting on port {port}')
+    app.run(host='0.0.0.0', port=port, debug=False)
