@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign In — CookieVerify</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/shared.css" />
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
+
+    .auth-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .auth-logo svg { width: 30px; height: 30px; }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 36px;
+    }
+
+    .auth-card h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .auth-card .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-bottom: 28px;
+    }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .alert.error  { background: var(--error-light);   color: var(--error);   border: 1px solid #fca5a5; display: block; }
+    .alert.success { background: var(--success-light); color: var(--success); border: 1px solid #6ee7b7; display: block; }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .divider-text {
+      position: relative;
+      text-align: center;
+      margin: 20px 0;
+      color: var(--text-subtle);
+      font-size: 12px;
+    }
+    .divider-text::before, .divider-text::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      width: 42%;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider-text::before { left: 0; }
+    .divider-text::after  { right: 0; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--primary); }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+
+    <a class="auth-logo" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      CookieVerify
+    </a>
+
+    <div class="auth-card">
+      <h1>Welcome back</h1>
+      <p class="subtitle">Sign in to your account to continue</p>
+
+      <div id="alert" class="alert" role="alert"></div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <input id="email" class="form-control" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" class="form-control" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn">
+          Sign in
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        Don't have an account?
+        <a href="/register.html">Create one free</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <a href="/">CookieVerify.com</a> · LinkedIn Cookie Validator
+</footer>
+
+<div id="toast"></div>
+<script src="/shared.js"></script>
+<script>
+  // Redirect if already logged in
+  redirectIfLoggedIn('/dashboard.html');
+
+  const form     = document.getElementById('login-form');
+  const alertEl  = document.getElementById('alert');
+  const submitBtn = document.getElementById('submit-btn');
+
+  function showAlert(msg, type = 'error') {
+    alertEl.textContent = msg;
+    alertEl.className = `alert ${type}`;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertEl.className = 'alert';
+
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      showAlert('Please fill in all fields.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in…';
+
+    try {
+      const res = await fetch(API_BASE + '/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showAlert(data.error || 'Sign in failed. Please try again.');
+      } else {
+        setToken(data.token);
+        window.location.href = '/dashboard.html';
+      }
+    } catch (err) {
+      showAlert('Connection error. Please check your internet and try again.');
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign in';
+  });
+</script>
+</body>
+</html>

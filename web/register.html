@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create Account — CookieVerify</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="stylesheet" href="/shared.css" />
+  <style>
+    body { display: flex; flex-direction: column; min-height: 100vh; background: var(--bg); }
+
+    .auth-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .auth-box { width: 100%; max-width: 420px; }
+
+    .auth-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--primary);
+      text-decoration: none;
+      justify-content: center;
+      margin-bottom: 32px;
+    }
+    .auth-logo svg { width: 30px; height: 30px; }
+
+    .auth-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 36px;
+    }
+
+    .auth-card h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+    .auth-card .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 18px;
+      display: none;
+    }
+    .alert.error   { background: var(--error-light);   color: var(--error);   border: 1px solid #fca5a5; display: block; }
+    .alert.success { background: var(--success-light); color: var(--success); border: 1px solid #6ee7b7; display: block; }
+
+    .perks {
+      list-style: none;
+      margin-bottom: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .perks li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .perks li svg { color: var(--success); flex-shrink: 0; }
+
+    .auth-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    .auth-footer a:hover { text-decoration: underline; }
+
+    .terms {
+      font-size: 11px;
+      color: var(--text-subtle);
+      text-align: center;
+      margin-top: 14px;
+      line-height: 1.6;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+    footer a { color: var(--text-muted); text-decoration: none; }
+    footer a:hover { color: var(--primary); }
+
+    .strength-bar {
+      height: 3px;
+      border-radius: 99px;
+      margin-top: 6px;
+      background: var(--border);
+      overflow: hidden;
+    }
+    .strength-fill {
+      height: 100%;
+      border-radius: 99px;
+      width: 0%;
+      transition: width .3s, background .3s;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-box">
+
+    <a class="auth-logo" href="/">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      CookieVerify
+    </a>
+
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p class="subtitle">Free to start — no credit card required</p>
+
+      <ul class="perks">
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Validate single &amp; batch cookies
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Full validation history saved
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          API key for programmatic access
+        </li>
+        <li>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Export results as JSON or CSV
+        </li>
+      </ul>
+
+      <div id="alert" class="alert" role="alert"></div>
+
+      <form id="register-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email address</label>
+          <input id="email" class="form-control" type="email" placeholder="you@example.com" autocomplete="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input id="password" class="form-control" type="password" placeholder="At least 8 characters" autocomplete="new-password" required />
+          <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
+        </div>
+
+        <div class="form-group">
+          <label for="confirm">Confirm password</label>
+          <input id="confirm" class="form-control" type="password" placeholder="Repeat your password" autocomplete="new-password" required />
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full btn-lg" id="submit-btn">
+          Create account
+        </button>
+      </form>
+
+      <p class="terms">
+        By creating an account you agree to our
+        <a href="#" style="color:var(--text-muted)">Terms of Service</a> and
+        <a href="#" style="color:var(--text-muted)">Privacy Policy</a>.
+      </p>
+
+      <div class="auth-footer">
+        Already have an account?
+        <a href="/login.html">Sign in</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <a href="/">CookieVerify.com</a> · LinkedIn Cookie Validator
+</footer>
+
+<div id="toast"></div>
+<script src="/shared.js"></script>
+<script>
+  redirectIfLoggedIn('/dashboard.html');
+
+  const form      = document.getElementById('register-form');
+  const alertEl   = document.getElementById('alert');
+  const submitBtn = document.getElementById('submit-btn');
+  const pwInput   = document.getElementById('password');
+  const fill      = document.getElementById('strength-fill');
+
+  function showAlert(msg, type = 'error') {
+    alertEl.textContent = msg;
+    alertEl.className = `alert ${type}`;
+  }
+
+  // Password strength indicator
+  pwInput.addEventListener('input', () => {
+    const v = pwInput.value;
+    let score = 0;
+    if (v.length >= 8)  score++;
+    if (v.length >= 12) score++;
+    if (/[A-Z]/.test(v)) score++;
+    if (/[0-9]/.test(v)) score++;
+    if (/[^A-Za-z0-9]/.test(v)) score++;
+    const pct  = Math.min(100, score * 20);
+    const color = score <= 1 ? '#dc2626' : score <= 3 ? '#d97706' : '#059669';
+    fill.style.width = pct + '%';
+    fill.style.background = color;
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    alertEl.className = 'alert';
+
+    const email    = document.getElementById('email').value.trim();
+    const password = pwInput.value;
+    const confirm  = document.getElementById('confirm').value;
+
+    if (!email || !password || !confirm) {
+      showAlert('Please fill in all fields.');
+      return;
+    }
+    if (password.length < 8) {
+      showAlert('Password must be at least 8 characters.');
+      return;
+    }
+    if (password !== confirm) {
+      showAlert('Passwords do not match.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account…';
+
+    try {
+      const res = await fetch(API_BASE + '/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showAlert(data.error || 'Registration failed. Please try again.');
+      } else {
+        setToken(data.token);
+        window.location.href = '/dashboard.html';
+      }
+    } catch {
+      showAlert('Connection error. Please check your internet and try again.');
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create account';
+  });
+</script>
+</body>
+</html>

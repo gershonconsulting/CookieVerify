@@ -12,25 +12,140 @@ import json
 import os
 from datetime import datetime
 
+import database
+import auth as auth_module
+from middleware import require_auth, optional_auth
+
 app = Flask(__name__, static_folder='web', static_url_path='')
-CORS(app)  # Enable CORS for all routes
+CORS(app, resources={r'/api/*': {'origins': '*'}})
+
+# Initialise database on startup
+database.init_db()
+
+
+# ── Auth routes ────────────────────────────────────────────────────────────────
+
+@app.route('/api/auth/register', methods=['POST'])
+def api_register():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+    result, error = auth_module.register(email, password)
+    if error:
+        return jsonify({'error': error}), 400
+    return jsonify(result), 201
+
+
+@app.route('/api/auth/login', methods=['POST'])
+def api_login():
+    data = request.get_json() or {}
+    email = data.get('email', '').strip()
+    password = data.get('password', '')
+    if not email or not password:
+        return jsonify({'error': 'Email and password are required'}), 400
+    result, error = auth_module.login(email, password)
+    if error:
+        return jsonify({'error': error}), 401
+    return jsonify(result)
+
+
+@app.route('/api/auth/logout', methods=['POST'])
+def api_logout():
+    token = request.headers.get('Authorization', '').replace('Bearer ', '').strip()
+    if token:
+        auth_module.logout(token)
+    return jsonify({'ok': True})
+
+
+@app.route('/api/auth/me', methods=['GET'])
+@require_auth
+def api_me():
+    from flask import g
+    u = g.current_user
+    return jsonify({'id': u['id'], 'email': u['email'], 'plan': u.get('plan', 'free')})
+
+
+# ── User / dashboard routes ────────────────────────────────────────────────────
+
+@app.route('/api/user/stats', methods=['GET'])
+@require_auth
+def api_user_stats():
+    from flask import g
+    return jsonify(database.get_user_stats(g.current_user['id']))
+
+
+@app.route('/api/user/history', methods=['GET'])
+@require_auth
+def api_user_history():
+    from flask import g
+    page = int(request.args.get('page', 1))
+    limit = min(int(request.args.get('limit', 20)), 100)
+    filter_by = request.args.get('filter', 'all')
+    return jsonify(database.get_user_history(g.current_user['id'], page, limit, filter_by))
+
+
+@app.route('/api/user/api-keys', methods=['GET'])
+@require_auth
+def api_list_keys():
+    from flask import g
+    keys = database.get_user_api_keys(g.current_user['id'])
+    # Mask key — show only last 6 chars
+    for k in keys:
+        k['key_masked'] = 'cv_' + '•' * 20 + k['key'][-6:]
+    return jsonify(keys)
+
+
+@app.route('/api/user/api-keys', methods=['POST'])
+@require_auth
+def api_create_key():
+    from flask import g
+    data = request.get_json() or {}
+    name = data.get('name', 'New Key')[:50]
+    key = database.create_api_key(g.current_user['id'], name)
+    return jsonify(key), 201
+
+
+@app.route('/api/user/api-keys/<int:key_id>', methods=['DELETE'])
+@require_auth
+def api_revoke_key(key_id):
+    from flask import g
+    database.revoke_api_key(key_id, g.current_user['id'])
+    return jsonify({'ok': True})
+
+
+# ── Validate route (updated with optional auth + history) ─────────────────────
 
 @app.route('/api/validate', methods=['POST'])
+@optional_auth
 def validate_cookie():
     """Validate a LinkedIn cookie and extract profile information"""
+    from flask import g
     try:
         data = request.get_json()
         cookie_value = data.get('cookie')
-        email = data.get('email')  # Optional: email for better Google search
-        name = data.get('name')    # Optional: name for better Google search
-        
+        email = data.get('email')
+        name = data.get('name')
+
         if not cookie_value:
             return jsonify({'error': 'No cookie provided'}), 400
-        
-        # Validate cookie with optional context
+
         result = validate_linkedin_cookie(cookie_value, email=email, name=name)
+
+        # Save to history if authenticated
+        if g.current_user:
+            source = 'api' if g.auth_type == 'api_key' else 'web'
+            database.save_validation(
+                g.current_user['id'],
+                cookie_value,
+                result,
+                source=source,
+                api_key_id=g.api_key_id
+            )
+
         return jsonify(result)
-        
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
