@@ -16,14 +16,22 @@ apt-get install -y python3 python3-pip python3-venv nginx certbot python3-certbo
 
 echo "=== Cloning repo ==="
 mkdir -p $APP_DIR
-git clone https://github.com/gershonconsulting/CookieVerify.git $APP_DIR
+if [ -d "$APP_DIR/.git" ]; then
+    echo "Repo already exists, pulling latest..."
+    git -C $APP_DIR pull
+else
+    git clone https://github.com/gershonconsulting/CookieVerify.git $APP_DIR
+fi
 cd $APP_DIR
 
+echo "=== Fixing file permissions ==="
+chown -R $APP_USER:$APP_USER $APP_DIR
+chmod -R 755 $APP_DIR
+
 echo "=== Setting up Python virtualenv ==="
-python3 -m venv venv
-source venv/bin/activate
-pip install --upgrade pip
-pip install -r requirements.txt
+sudo -u $APP_USER python3 -m venv $APP_DIR/venv
+sudo -u $APP_USER $APP_DIR/venv/bin/pip install --upgrade pip
+sudo -u $APP_USER $APP_DIR/venv/bin/pip install -r $APP_DIR/requirements.txt
 
 echo "=== Creating systemd service ==="
 cat > /etc/systemd/system/cookieverify.service <<EOF
@@ -45,9 +53,12 @@ EOF
 
 systemctl daemon-reload
 systemctl enable cookieverify
-systemctl start cookieverify
+systemctl restart cookieverify
 
 echo "=== Configuring Nginx ==="
+# Remove default site to prevent 403 conflicts
+rm -f /etc/nginx/sites-enabled/default
+
 cat > /etc/nginx/sites-available/cookieverify <<EOF
 server {
     listen 80;
@@ -83,7 +94,11 @@ nginx -t
 systemctl reload nginx
 
 echo "=== Setting up SSL with Let's Encrypt ==="
-certbot --nginx -d $DOMAIN_WEB -d www.$DOMAIN_WEB -d $DOMAIN_API --non-interactive --agree-tos -m admin@cookieverify.com
+certbot --nginx -d $DOMAIN_WEB -d www.$DOMAIN_WEB -d $DOMAIN_API --non-interactive --agree-tos -m admin@cookieverify.com || {
+    echo "WARNING: SSL setup failed (DNS may not have propagated yet). HTTP will still work."
+    echo "Re-run this script later to retry SSL, or run:"
+    echo "  certbot --nginx -d $DOMAIN_WEB -d www.$DOMAIN_WEB -d $DOMAIN_API"
+}
 
 echo ""
 echo "=== DONE ==="
