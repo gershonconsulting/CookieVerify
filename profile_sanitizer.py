@@ -1,5 +1,4 @@
-hello world
-line 2"""
+"""
 profile_sanitizer.py  —  v1.2.0
 --------------------
 Cleans LinkedIn profile data before serializing the /api/validate response.
