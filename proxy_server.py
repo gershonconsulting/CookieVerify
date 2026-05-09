@@ -11,6 +11,9 @@ import re
 import json
 import os
 from datetime import datetime
+from profile_sanitizer import sanitize_profile
+
+VERSION = "1.2.0"
 
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)  # Enable CORS for all routes
@@ -29,6 +32,10 @@ def validate_cookie():
         
         # Validate cookie with optional context
         result = validate_linkedin_cookie(cookie_value, email=email, name=name)
+        # Sanitize profile data: strip trailing punctuation, reject vanity-slug-as-name,
+        # add username + profileComplete + nameSource derived fields.
+        result = sanitize_profile(result)
+        result["version"] = VERSION
         return jsonify(result)
         
     except Exception as e:
@@ -209,24 +216,44 @@ def extract_company_from_headline(headline):
     return None
 
 def infer_name_from_vanity(vanity_name):
-    """Infer first/last name from vanity name"""
-    # Remove numbers and special suffixes
-    clean_vanity = re.sub(r'-\d+$', '', vanity_name)
-    
-    result = {}
-    
-    if '-' in clean_vanity:
-        parts = clean_vanity.split('-')
-        result['firstName'] = capitalize_first(parts[0])
-        if len(parts) > 1 and not re.match(r'^\d', parts[1]):
-            result['lastName'] = capitalize_first(parts[1])
-            result['fullName'] = f"{result['firstName']} {result['lastName']}"
-        else:
-            result['fullName'] = result['firstName']
+    """Infer first/last name from vanity name.
+
+    Returns an empty dict whenever the slug doesn't carry reliable name
+    structure — i.e. anything other than a hyphenated 'firstname-lastname'
+    pattern. Single-token slugs ('zaksirlin', 'ouryc'), digit-laden slugs
+    ('brunoseguin9178874'), and slugs with attached digits all return {}
+    so the downstream sanitizer flags the response as nameSource='vanity_only'.
+    """
+    if not vanity_name:
+        return {}
+
+    # Strip a real LinkedIn collision suffix like "-12345" or "_12345".
+    # Crucially: do NOT strip digits concatenated directly to the name
+    # (e.g. "brunoseguin9178874") — that pattern indicates the slug is
+    # garbage, not a real name with a numeric suffix.
+    clean_vanity = re.sub(r'[-_]\d+$', '', vanity_name)
+
+    # If anything digit-like remains, the slug is unusable.
+    if not clean_vanity or re.search(r'\d', clean_vanity):
+        return {}
+
+    # Only extract names from hyphenated slugs (LinkedIn's standard
+    # 'firstname-lastname' format). Single-token slugs like 'zaksirlin'
+    # are concatenated firstname+lastname with no reliable split point
+    # and must not be used as a name source.
+    if '-' not in clean_vanity:
+        return {}
+
+    parts = clean_vanity.split('-')
+    result = {
+        'firstName': capitalize_first(parts[0]),
+    }
+    if len(parts) > 1 and not re.match(r'^\d', parts[1]):
+        result['lastName'] = capitalize_first(parts[1])
+        result['fullName'] = f"{result['firstName']} {result['lastName']}"
     else:
-        result['firstName'] = capitalize_first(clean_vanity)
         result['fullName'] = result['firstName']
-    
+
     return result
 
 def capitalize_first(text):
@@ -372,7 +399,7 @@ def get_linkedin_url_from_google(profile_info, vanity_name, search_context=None)
 @app.route('/api/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
-    return jsonify({'status': 'ok', 'service': 'CookieVerify.com API'})
+    return jsonify({'status': 'ok', 'service': 'CookieVerify.com API', 'version': VERSION})
 
 @app.route('/api/docs', methods=['GET'])
 def api_documentation():

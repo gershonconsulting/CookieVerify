@@ -588,11 +588,12 @@ print(res.json())</div>
         <div class="card" style="padding:0;overflow:hidden;margin-bottom:20px">
           <div class="table-wrap">
             <table>
-              <thead><tr><th>#</th><th>Full Name</th><th>Title</th><th>Company</th><th>Profile</th></tr></thead>
+              <thead><tr><th>#</th><th>Username</th><th>Full Name</th><th>Title</th><th>Company</th><th>Profile</th></tr></thead>
               <tbody>
                 ${valid.map(r => `<tr>
                   <td>${results.indexOf(r) + 1}</td>
-                  <td>${escHtml(r.fullName || r.firstName || '—')}</td>
+                  <td>${escHtml(r.username || r.vanityName || '—')}</td>
+                  <td>${escHtml(r.fullName || '—')}</td>
                   <td title="${escHtml(r.title || '')}">${escHtml(truncate(r.title, 30) || '—')}</td>
                   <td title="${escHtml(r.company || '')}">${escHtml(truncate(r.company, 25) || '—')}</td>
                   <td>${r.profileUrl ? `<a href="${escHtml(r.profileUrl)}" target="_blank">View</a>` : '—'}</td>
@@ -632,9 +633,10 @@ print(res.json())</div>
   }
 
   function exportCsv() {
-    const h = ['#','isValid','fullName','firstName','lastName','title','company','profileUrl','vanityName','error'];
+    const h = ['#','isValid','profileComplete','nameSource','username','fullName','firstName','lastName','title','company','profileUrl','vanityName','error'];
     const rows = lastResults.map((r, i) => [
-      i+1, r.isValid, r.fullName||'', r.firstName||'', r.lastName||'',
+      i+1, r.isValid, r.profileComplete||false, r.nameSource||'',
+      r.username||r.vanityName||'', r.fullName||'', r.firstName||'', r.lastName||'',
       r.title||'', r.company||'', r.profileUrl||'', r.vanityName||'', r.error||''
     ]);
     const csv = [h, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -657,6 +659,13 @@ print(res.json())</div>
       setTimeout(() => btn.textContent = 'Copy', 2000);
     });
   }
+
+  // Fetch + display API version in footer (silent on failure).
+  fetch('/api/health').then(r => r.json()).then(d => {
+    const v = document.getElementById('app-version');
+    if (v && d.version) v.textContent = 'v' + d.version;
+  }).catch(() => {});
 </script>
+<div id="app-version" style="position:fixed;bottom:8px;right:12px;font-size:11px;color:#888;font-family:monospace;opacity:0.7;pointer-events:none;"></div>
 </body>
 </html>
