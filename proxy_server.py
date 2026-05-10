@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 from profile_sanitizer import sanitize_profile
 
-VERSION = "1.2.2"
+VERSION = "1.2.3"
 
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)  # Enable CORS for all routes
