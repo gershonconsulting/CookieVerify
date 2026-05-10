@@ -161,11 +161,20 @@ def sanitize_profile(profile):
     profile["username"] = vanity
 
     # 3. Detect vanity-slug-as-name and null out garbage.
-    name_is_garbage = (
-        _is_vanity_garbage(profile.get("firstName"), vanity)
-        or _is_vanity_garbage(profile.get("fullName"), vanity)
-        or _is_vanity_garbage(profile.get("lastName"), vanity)
-    )
+    # If we have BOTH a firstName AND a lastName populated (and neither is a
+    # null literal), trust them as a real name structure. This avoids false
+    # positives like firstName="Bruno", lastName="Séguin", vanity="brunoseguin9178874"
+    # — where the vanity slug happens to start with "bruno" + digits.
+    has_first = profile.get("firstName") and profile.get("firstName").strip().lower() not in _NULL_LITERALS
+    has_last = profile.get("lastName") and profile.get("lastName").strip().lower() not in _NULL_LITERALS
+    if has_first and has_last:
+        name_is_garbage = False
+    else:
+        name_is_garbage = (
+            _is_vanity_garbage(profile.get("firstName"), vanity)
+            or _is_vanity_garbage(profile.get("fullName"), vanity)
+            or _is_vanity_garbage(profile.get("lastName"), vanity)
+        )
     if name_is_garbage:
         profile["firstName"] = None
         profile["lastName"]  = None
