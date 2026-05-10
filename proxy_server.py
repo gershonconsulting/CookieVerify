@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 from profile_sanitizer import sanitize_profile
 
-VERSION = "1.2.0"
+VERSION = "1.2.1"
 
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)  # Enable CORS for all routes
@@ -168,8 +168,10 @@ def extract_profile_from_api(cookie_value, vanity_name):
                     
                     # Profile entity
                     if 'Profile' in item_type:
-                        profile_info['firstName'] = item.get('firstName', profile_info.get('firstName'))
-                        profile_info['lastName'] = item.get('lastName', profile_info.get('lastName'))
+                        fn = item.get('firstName')
+                        ln = item.get('lastName')
+                        if fn: profile_info['firstName'] = fn
+                        if ln: profile_info['lastName'] = ln
                         headline = item.get('headline', profile_info.get('headline'))
                         if headline:
                             profile_info['headline'] = headline
@@ -192,10 +194,10 @@ def extract_profile_from_api(cookie_value, vanity_name):
                 if company:
                     profile_info['company'] = company
             
-            # Build full name
-            if 'firstName' in profile_info and 'lastName' in profile_info:
+            # Build full name (only if both are truthy — avoids "None None" when API returns nulls)
+            if profile_info.get('firstName') and profile_info.get('lastName'):
                 profile_info['fullName'] = f"{profile_info['firstName']} {profile_info['lastName']}"
-            elif 'firstName' in profile_info:
+            elif profile_info.get('firstName'):
                 profile_info['fullName'] = profile_info['firstName']
                 
     except Exception as e:
@@ -301,9 +303,12 @@ def get_profile_by_member_id(cookie_value, member_id):
                     item_type = item.get('$type', '')
                     
                     if 'Profile' in item_type:
-                        profile_info['firstName'] = item.get('firstName', profile_info.get('firstName'))
-                        profile_info['lastName'] = item.get('lastName', profile_info.get('lastName'))
-                        profile_info['headline'] = item.get('headline', profile_info.get('headline'))
+                        fn = item.get('firstName')
+                        ln = item.get('lastName')
+                        hl = item.get('headline')
+                        if fn: profile_info['firstName'] = fn
+                        if ln: profile_info['lastName'] = ln
+                        if hl: profile_info['headline'] = hl
                         
                         if 'publicIdentifier' in item:
                             profile_info['vanityName'] = item['publicIdentifier']
