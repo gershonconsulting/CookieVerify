@@ -13,7 +13,7 @@ import os
 from datetime import datetime
 from profile_sanitizer import sanitize_profile
 
-VERSION = "1.2.1"
+VERSION = "1.2.2"
 
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)  # Enable CORS for all routes
@@ -53,6 +53,9 @@ def validate_linkedin_cookie(cookie_value, email=None, name=None):
         }
         
         response = requests.get(feed_url, headers=headers, timeout=15)
+        # LinkedIn doesn't always set charset=utf-8; force it so accented chars
+        # (e.g. "Séguin") decode correctly instead of becoming "SÃ©guin".
+        response.encoding = 'utf-8'
         
         if response.status_code != 200:
             return {
@@ -76,10 +79,42 @@ def validate_linkedin_cookie(cookie_value, email=None, name=None):
                 vanity_name = vanity_match.group(1)
                 break
         
+        # Step 2b: Extract name directly from feed response.
+        # The feed page embeds the user's name as memberFirstName / memberLastName
+        # inside escaped JSON blobs (e.g. \"memberFirstName\":\"Bruno\").
+        # This is the most reliable source — the Voyager API often omits the
+        # firstName/lastName fields entirely for some accounts.
+        feed_first_name = None
+        feed_last_name = None
+        feed_name_patterns = [
+            (r'\\"memberFirstName\\":\\"([^"\\]+)\\"',
+             r'\\"memberLastName\\":\\"([^"\\]+)\\"'),
+            (r'"memberFirstName":"([^"]+)"',
+             r'"memberLastName":"([^"]+)"'),
+            (r'"firstName":"([^"]+)"',
+             r'"lastName":"([^"]+)"'),
+        ]
+        for fn_pat, ln_pat in feed_name_patterns:
+            fn_m = re.search(fn_pat, response.text)
+            ln_m = re.search(ln_pat, response.text)
+            if fn_m and ln_m:
+                feed_first_name = fn_m.group(1)
+                feed_last_name = ln_m.group(1)
+                break
+        
         # Step 3: Get detailed profile from API (if we have vanity name)
         profile_info = {}
+        if feed_first_name:
+            profile_info['firstName'] = feed_first_name
+        if feed_last_name:
+            profile_info['lastName'] = feed_last_name
         if vanity_name:
-            profile_info = extract_profile_from_api(cookie_value, vanity_name)
+            api_profile = extract_profile_from_api(cookie_value, vanity_name)
+            # Merge API profile into existing profile_info (which may already have
+            # firstName/lastName from the feed extraction). Only overwrite when the
+            # incoming value is truthy.
+            for k, v in (api_profile or {}).items():
+                if v: profile_info[k] = v
             
             # Fallback: Infer name from vanity name
             if not profile_info.get('firstName'):
