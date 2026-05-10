@@ -59,12 +59,18 @@ def _normalize(s):
     return re.sub(r"[^a-z0-9]", "", no_accents.lower())
 
 
+_NULL_LITERALS = {"none", "null", "undefined", "nil", "n/a", "na", "none none", "null null"}
+
+
 def _is_vanity_garbage(name, vanity):
     """
-    Returns True when `name` is clearly the vanity URL slug rather than a
-    real human display name.
+    Returns True when `name` is clearly the vanity URL slug or a literal
+    "None"/"null" string from a serialization bug rather than a real
+    human display name.
 
     Signals:
+      - Literal "None"/"null"/"undefined" strings (caused by upstream
+        f-string formatting None values into strings — v1.2.1).
       - Digits in the name (LinkedIn display names never have them).
       - Single-token name (no space) whose normalized form matches the
         vanity slug — e.g. firstName="Zaksirlin" with vanity="zaksirlin",
@@ -75,6 +81,8 @@ def _is_vanity_garbage(name, vanity):
     """
     if not name:
         return False
+    if name.strip().lower() in _NULL_LITERALS:
+        return True
     if _HAS_DIGIT.search(name):
         return True
     if vanity and " " not in name:
