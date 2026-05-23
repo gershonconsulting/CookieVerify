@@ -1,0 +1,18 @@
+# Caddyfile for 187.124.235.148
+# Serves: app.cookieverify.com, api.cookieverify.com, cookieverify.com
+# Flask/gunicorn listens on 127.0.0.1:5000
+
+app.cookieverify.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:5000
+}
+
+api.cookieverify.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:5000
+}
+
+cookieverify.com, www.cookieverify.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:5000
+}
