@@ -1,7 +1,7 @@
 ================================================================
 HANDOFF.txt  -  CookieVerify
 Written by: Claude (nightly run) - token-limit handoff protocol
-Date: 2026-10-27
+Date: 2026-10-27 (updated 2026-11-17)
 Reason: repo had no HANDOFF.txt. Another AI can continue this work
         from this file alone.
 ================================================================
@@ -28,6 +28,8 @@ CRITICAL OPERATING RULES - do not break these:
                     actually action - never a CLI step)
   * Executors: Ariel = code and repo work. Charles = Chrome extension
     and web admin panels (Cloudflare, GitHub settings, DNS, publishing).
+  * THIS REPO IS PUBLIC. Never commit cookie values, tokens or captured
+    LinkedIn pages, not even in docs or this file.
 
 1. WHAT THIS REPO IS
 ----------------------------------------------------------------
@@ -60,6 +62,11 @@ Secrets / env vars  : none documented; check the VPS environment.
 3. RECENTLY DONE  [DONE]
 ----------------------------------------------------------------
 - 2026-05-23: caddy-fix.sh added to restore TLS.
+- [DONE] Files holding live LinkedIn session cookies removed from main:
+  debug_aissa_cookie.py, test_title_extraction.py and the captured
+  signed-in page aissa_feed_response.html (commits 97ddc50, fe00316,
+  e0be17c). Checked 2026-11-17: no full li_at value left in the main tree
+  (docs only show truncated "AQE..." examples).
 
 4. PENDING  [TODO]
 ----------------------------------------------------------------
@@ -68,24 +75,25 @@ Secrets / env vars  : none documented; check the VPS environment.
 
 5. MISSING / NOT BUILT YET
 ----------------------------------------------------------------
-- No CI deploy, no automated tests beyond test_title_extraction.py.
+- No CI deploy and no automated tests (test_title_extraction.py was removed
+  with the leaked cookie).
 
 6. KNOWN BUGS / NEEDS FIXING
 ----------------------------------------------------------------
-- SECURITY: debug_aissa_cookie.py and test_title_extraction.py (and
-  aissa_feed_response.html) contain a real-looking LinkedIn li_at session
-  cookie in a PUBLIC repo. Treat it as compromised: have the account owner
-  log out of all LinkedIn sessions to revoke it, delete or sanitise these
-  files, and consider making the repo private. (Value deliberately not
-  repeated here.) Git history still holds it.
+- SECURITY [TODO]: the removed files are still in git HISTORY of this
+  PUBLIC repo. Treat that LinkedIn session as compromised: the account
+  owner must log out of all LinkedIn sessions to revoke it. Then either
+  make the repo private or purge the history. (Value deliberately not
+  repeated here.)
 - Many overlapping deployment docs (GENSPARK, HOSTINGER, DEPLOYMENT_OPTIONS)
   - only the Hostinger VPS + Caddy route is current.
 
 7. NEXT ACTION - START HERE
 ----------------------------------------------------------------
 The single most valuable next step is:
-  -> Revoke the leaked li_at cookie and remove the debug files from the
-     repo, then verify the live site.
+  -> Confirm the leaked LinkedIn session was revoked (account owner: sign
+     out of all sessions), then make the repo private (Charles, GitHub
+     settings), then verify the live site.
 
 8. GOTCHAS / HARD-WON LESSONS
 ----------------------------------------------------------------
@@ -94,7 +102,7 @@ The single most valuable next step is:
 
 9. CONTACT / ESCALATION
 ----------------------------------------------------------------
-Olivier Attia - oattia@gmail.com
+Olivier Attia (owner)
 Report mailbox - report@gershonconsulting.com
 
 ================================================================
